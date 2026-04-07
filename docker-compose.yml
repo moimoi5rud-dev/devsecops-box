@@ -1,0 +1,133 @@
+version: '3.8'
+
+x-dojo-env: &dojo-env
+  DD_DATABASE_URL: postgresql://defectdojo:defectdojo_password@dojo_postgres:5432/defectdojo
+  DD_CELERY_BROKER_URL: redis://dojo_valkey:6379/0
+  DD_SECRET_KEY: "super_secret_django_key_for_production"
+  DD_CREDENTIAL_AES_256_KEY: "bAbsUZfR4nLw91aagLqesc0DJ2="
+  DD_DEBUG: 'False'
+  DD_ALLOWED_HOSTS: "*"
+  DD_CELERY_WORKER_POOL_TYPE: "prefork"
+  DD_CELERY_WORKER_CONCURRENCY: "8"
+  DD_CELERY_WORKER_PREFETCH_MULTIPLIER: "128"
+
+services:
+  sonarqube:
+    image: sonarqube:community
+    container_name: sonarqube_server
+    depends_on:
+      - sonar_db
+    environment:
+      - SONAR_JDBC_URL=jdbc:postgresql://sonar_db:5432/sonar
+      - SONAR_JDBC_USERNAME=sonar
+      - SONAR_JDBC_PASSWORD=sonar_strong_password
+      - SONAR_ES_BOOTSTRAP_CHECKS_DISABLE=true
+    ports:
+      - "9000:9000"
+    volumes:
+      - sonar_data:/opt/sonarqube/data
+      - sonar_extensions:/opt/sonarqube/extensions
+      - sonar_logs:/opt/sonarqube/logs
+    networks:
+      - devsecops_net
+
+  sonar_db:
+    image: postgres:15-alpine
+    container_name: sonar_db
+    environment:
+      - POSTGRES_USER=sonar
+      - POSTGRES_PASSWORD=sonar_strong_password
+      - POSTGRES_DB=sonar
+    volumes:
+      - sonar_pg_data:/var/lib/postgresql/data
+    networks:
+      - devsecops_net
+
+  dojo_postgres:
+    image: postgres:15-alpine
+    container_name: dojo_postgres
+    environment:
+      - POSTGRES_USER=defectdojo
+      - POSTGRES_PASSWORD=defectdojo_password
+      - POSTGRES_DB=defectdojo
+    volumes:
+      - dojo_pg_data:/var/lib/postgresql/data
+    networks:
+      - devsecops_net
+
+  dojo_valkey:
+    image: valkey/valkey:7.2.12-alpine
+    container_name: dojo_valkey
+    volumes:
+      - dojo_redis_data:/data
+    networks:
+      - devsecops_net
+
+  dojo_initializer:
+    image: defectdojo/defectdojo-django:latest
+    container_name: dojo_initializer
+    depends_on:
+      - dojo_postgres
+      - dojo_valkey
+    entrypoint: ['/wait-for-it.sh', 'dojo_postgres:5432', '-t', '60', '--', '/entrypoint-initializer.sh']
+    environment:
+      <<: *dojo-env
+      DD_ADMIN_USER: admin
+      DD_ADMIN_PASSWORD: admin_strong_password
+      DD_ADMIN_MAIL: admin@local.dev
+    networks:
+      - devsecops_net
+
+  dojo_uwsgi:
+    image: defectdojo/defectdojo-django:latest
+    container_name: dojo_uwsgi
+    depends_on:
+      - dojo_initializer
+    entrypoint: ['/wait-for-it.sh', 'dojo_postgres:5432', '-t', '60', '--', '/entrypoint-uwsgi.sh']
+    environment:
+      <<: *dojo-env
+      DD_UWSGI_NUM_OF_PROCESSES: "4"
+      DD_UWSGI_NUM_OF_THREADS: "6"
+    networks:
+      - devsecops_net
+
+  dojo_celeryworker:
+    image: defectdojo/defectdojo-django:latest
+    container_name: dojo_celeryworker
+    depends_on:
+      - dojo_initializer
+    entrypoint: ['/wait-for-it.sh', 'dojo_postgres:5432', '-t', '60', '--', '/entrypoint-celery-worker.sh']
+    environment:
+      <<: *dojo-env
+    volumes:
+      - dojo_media_data:/app/media
+    networks:
+      - devsecops_net
+
+  dojo_nginx:
+    image: defectdojo/defectdojo-nginx:latest
+    container_name: dojo_nginx
+    depends_on:
+      - dojo_uwsgi
+    ports:
+      - "8081:8080"
+    environment:
+      - DD_UWSGI_HOST=dojo_uwsgi
+      - DD_UWSGI_PORT=3031
+    volumes:
+      - dojo_media_data:/usr/share/nginx/html/media
+    networks:
+      - devsecops_net
+
+volumes:
+  sonar_data:
+  sonar_extensions:
+  sonar_logs:
+  sonar_pg_data:
+  dojo_pg_data:
+  dojo_redis_data:
+  dojo_media_data:
+
+networks:
+  devsecops_net:
+    driver: bridge
