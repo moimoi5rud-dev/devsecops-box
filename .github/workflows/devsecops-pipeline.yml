@@ -1,0 +1,38 @@
+name: DevSecOps Full Pipeline
+
+on:
+  pull_request:
+    branches: [ main, master ]
+  push:
+    branches: [ main, master ]
+
+jobs:
+  security-scan-and-remediation:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Run Security Scans (SonarQube + Semgrep + SCA)
+        run: |
+          chmod +x run_security_scans.sh
+          ./run_security_scans.sh
+
+      - name: Import reports to DefectDojo
+        run: |
+          python3 dojo_importer.py
+
+      - name: Agentic AI Auto Remediation (Cline)
+        run: |
+          chmod +x auto_remediate.sh
+          ./auto_remediate.sh
+
+      - name: Create Pull Request with fixes (nếu có vá)
+        uses: peter-evans/create-pull-request@v6
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          commit-message: "Auto-fix security issues by Agentic AI"
+          title: "🤖 Auto Remediation - Security Fixes"
+          branch: autofix-ai-remediation
+          delete-branch: true
