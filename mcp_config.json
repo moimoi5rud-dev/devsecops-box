@@ -1,0 +1,12 @@
+{
+  "mcpServers": {
+    "defectdojo": {
+      "command": "uvx",
+      "args": ["defectdojo-mcp"],
+      "env": {
+        "DEFECTDOJO_API_TOKEN": "c8572a5adf107a693aa6c72584da31f4d1f1dcff",
+        "DEFECTDOJO_API_BASE": "http://localhost:8081"
+      }
+    }
+  }
+}
