@@ -1,0 +1,21 @@
+version: "1.0"
+agent_policy:
+filesystem:
+allowed_paths: - /src_code - /tmp/agent_cache
+read_only: - /usr/bin - /lib
+network_policies:
+# Cấu hình 1: Cho phép truy cập Ollama cục bộ 
+ollama_backend:
+endpoints: - host: 127.0.0.1
+port: 11434
+rules: - method: POST
+path: /api/generate - method: POST
+path: /api/chat
+# Cấu hình 2: Cho phép giao tiếp với Máy chủ DefectDojo MCP 
+defectdojo_mcp:
+endpoints: - host: 127.0.0.1
+port: 8080
+rules: - method: GET - method: POST
+# Khóa hoàn toàn lưu lượng mạng hướng ra Internet (Egress Traffic) 
+default_action: deny
+binaries: - path: /usr/bin/git - path: /usr/bin/npm - path: /usr/bin/python3
