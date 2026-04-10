@@ -40,3 +40,5 @@ jobs:
           title: "🤖 Auto Remediation - Security Fixes"
           branch: autofix-ai-remediation
           delete-branch: true
+          allow-empty: true          # ←←← Thêm dòng này để không fail khi không có thay đổi
+
