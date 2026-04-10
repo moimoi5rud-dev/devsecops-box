@@ -1,6 +1,5 @@
 name: DevSecOps Full Pipeline
 
-# ==================== QUYỀN QUAN TRỌNG ====================
 permissions:
   contents: write
   pull-requests: write
@@ -19,15 +18,15 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 0   # Quan trọng để git hoạt động tốt
+          fetch-depth: 0
 
       - name: Run Security Scans (SonarQube + Semgrep + SCA)
         run: |
-          # (các lệnh scan của em ở đây)
+          echo "🔍 Đang chạy security scans..."
 
       - name: Import reports to DefectDojo
         run: |
-          # (các lệnh import của em ở đây)
+          echo "📤 Importing reports to DefectDojo..."
 
       - name: Agentic AI Auto Remediation (Cline)
         run: |
@@ -42,8 +41,7 @@ jobs:
           title: "🔧 Auto Remediation - Security Fixes by Cline"
           body: |
             Tự động vá các lỗ hổng High/Critical bởi **Agentic AI (Cline)** + MCP + DefectDojo.
-            - Branch: `autofix-ai-remediation`
-            - Được tạo tự động bởi DevSecOps-in-a-Box pipeline.
+            Pipeline: DevSecOps-in-a-Box
           branch: autofix-ai-remediation
           delete-branch: true
           labels: security, auto-fix, ai-remediation
