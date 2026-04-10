@@ -21,10 +21,11 @@ jobs:
 
       - name: Import reports to DefectDojo
         run: |
-          python3 dojo_importer.py
-        env:
-          DOJO_API_URL: ${{ secrets.DOJO_API_URL }}
-          DEFECTDOJO_API_TOKEN: ${{ secrets.DEFECTDOJO_API_TOKEN }}
+          echo "Skip import because DefectDojo is running locally"
+          # python3 dojo_importer.py
+        # env:
+        #   DOJO_API_URL: ${{ secrets.DOJO_API_URL }}
+        #   DEFECTDOJO_API_TOKEN: ${{ secrets.DEFECTDOJO_API_TOKEN }}
 
       - name: Agentic AI Auto Remediation (Cline)
         run: |
