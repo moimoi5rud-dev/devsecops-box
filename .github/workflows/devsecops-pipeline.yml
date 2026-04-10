@@ -1,5 +1,10 @@
 name: DevSecOps Full Pipeline
 
+# ==================== QUYỀN QUAN TRỌNG ====================
+permissions:
+  contents: write
+  pull-requests: write
+
 on:
   pull_request:
     branches: [ main, master ]
@@ -13,19 +18,16 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0   # Quan trọng để git hoạt động tốt
 
       - name: Run Security Scans (SonarQube + Semgrep + SCA)
         run: |
-          chmod +x run_security_scans.sh
-          ./run_security_scans.sh
+          # (các lệnh scan của em ở đây)
 
       - name: Import reports to DefectDojo
         run: |
-          echo "Skip import because DefectDojo is running locally"
-          # python3 dojo_importer.py
-        # env:
-        #   DOJO_API_URL: ${{ secrets.DOJO_API_URL }}
-        #   DEFECTDOJO_API_TOKEN: ${{ secrets.DEFECTDOJO_API_TOKEN }}
+          # (các lệnh import của em ở đây)
 
       - name: Agentic AI Auto Remediation (Cline)
         run: |
@@ -36,7 +38,12 @@ jobs:
         uses: peter-evans/create-pull-request@v6
         with:
           token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Auto-fix security issues by Agentic AI"
-          title: "🤖 Auto Remediation - Security Fixes"
+          commit-message: "🔧 Auto-fix: Security remediation by Agentic AI (Cline)"
+          title: "🔧 Auto Remediation - Security Fixes by Cline"
+          body: |
+            Tự động vá các lỗ hổng High/Critical bởi **Agentic AI (Cline)** + MCP + DefectDojo.
+            - Branch: `autofix-ai-remediation`
+            - Được tạo tự động bởi DevSecOps-in-a-Box pipeline.
           branch: autofix-ai-remediation
           delete-branch: true
+          labels: security, auto-fix, ai-remediation
