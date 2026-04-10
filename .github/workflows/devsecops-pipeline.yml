@@ -32,13 +32,12 @@ jobs:
           chmod +x auto_remediate.sh
           ./auto_remediate.sh
 
-      - name: Create Pull Request with fixes (nếu có vá)
-        uses: peter-evans/create-pull-request@v6
-        with:
-          token: ${{ secrets.GITHUB_TOKEN }}
-          commit-message: "Auto-fix security issues by Agentic AI"
-          title: "🤖 Auto Remediation - Security Fixes"
-          branch: autofix-ai-remediation
-          delete-branch: true
-          allow-empty: true          # ←←← Thêm dòng này để không fail khi không có thay đổi
-
+- name: Create Pull Request with fixes (nếu có vá)
+  uses: peter-evans/create-pull-request@v6
+  with:
+    token: ${{ secrets.GITHUB_TOKEN }}
+    commit-message: "Auto-fix security issues by Agentic AI"
+    title: "🛠️ Auto Remediation - Security Fixes"
+    branch: autofix-ai-remediation
+    delete-branch: true
+    allow-empty: true          # ←←← Thêm dòng này để không fail khi không có thay đổi
